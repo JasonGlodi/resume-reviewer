@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { EditorFormProps } from "@/lib/types";
-import { EducationValues, workExperieceSchema } from "@/lib/validation";
+import { EducationValues, workExperienceSchema } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GripHorizontal } from "lucide-react";
 import { useEffect } from "react";
@@ -38,7 +38,7 @@ export default function EducationForm({
   setResumeData,
 }: EditorFormProps) {
   const form = useForm<EducationValues>({
-    resolver: zodResolver(workExperieceSchema),
+    resolver: zodResolver(workExperienceSchema),
     defaultValues: {
       educations: resumeData.educations || [],
     },

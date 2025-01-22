@@ -6,7 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 import { del, put } from "@vercel/blob";
 import path from "path";
 
-export async function SaveResume(values: ResumeValues) {
+export async function saveResume(values: ResumeValues) {
   const { id } = values;
 
   console.log("received values", values);
@@ -20,7 +20,7 @@ export async function SaveResume(values: ResumeValues) {
     throw new Error("User not authenticated");
   }
 
-  //todo; check resume count for non-premium users
+  // TODO: check resume count for non-premium users
 
   const existingResume = id
     ? await prisma.resume.findUnique({ where: { id, userId } })
@@ -34,14 +34,14 @@ export async function SaveResume(values: ResumeValues) {
 
   if (photo instanceof File) {
     if (existingResume?.photoUrl) {
-      await del(existingResume?.photoUrl);
+      await del(existingResume.photoUrl);
     }
+
     const blob = await put(`resume_photos/${path.extname(photo.name)}`, photo, {
       access: "public",
     });
-
     newPhotoUrl = blob.url;
-  } else if (photo == null) {
+  } else if (photo === null) {
     if (existingResume?.photoUrl) {
       await del(existingResume.photoUrl);
     }
@@ -64,7 +64,7 @@ export async function SaveResume(values: ResumeValues) {
         },
         educations: {
           deleteMany: {},
-          create: educations?.map((edu) => ({
+          create: workExperiences?.map((edu) => ({
             ...edu,
             startDate: edu.startDate ? new Date(edu.startDate) : undefined,
             endDate: edu.endDate ? new Date(edu.endDate) : undefined,
@@ -77,6 +77,7 @@ export async function SaveResume(values: ResumeValues) {
     return prisma.resume.create({
       data: {
         ...resumeValues,
+        userId,
         photoUrl: newPhotoUrl,
         workExperiences: {
           create: workExperiences?.map((exp) => ({
@@ -86,7 +87,7 @@ export async function SaveResume(values: ResumeValues) {
           })),
         },
         educations: {
-          create: educations?.map((edu) => ({
+          create: workExperiences?.map((edu) => ({
             ...edu,
             startDate: edu.startDate ? new Date(edu.startDate) : undefined,
             endDate: edu.endDate ? new Date(edu.endDate) : undefined,

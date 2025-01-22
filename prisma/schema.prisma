@@ -16,7 +16,7 @@ datasource db {
 
 model Resume{
   id String @id @default(cuid())
-  userid String
+  userId String
 
   title String?
   description String?
@@ -29,6 +29,7 @@ model Resume{
   firstName String?
   lastName String?
   jobTitle String?
+  city String?
   country String?
   phone String?
   email String?
