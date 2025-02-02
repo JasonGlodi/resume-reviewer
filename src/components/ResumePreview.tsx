@@ -183,7 +183,7 @@ function WorkExperienceSection({ resumeData }: ResumeSectionProps) {
               {exp.startDate && (
                 <span>
                   {formatDate(exp.startDate, "MM/yyyy")} -{" "}
-                  {exp.endDate ? formatDate(exp.endDate, "MM,yyyy") : "Present"}
+                  {exp.endDate ? formatDate(exp.endDate, "MM/yyyy") : "Present"}
                 </span>
               )}
             </div>
