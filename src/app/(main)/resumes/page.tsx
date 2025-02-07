@@ -1,50 +1,51 @@
-"use client";
+import prisma from "@/lib/prisma";
+import { resumeDataInclude } from "@/lib/types";
+import { auth } from "@clerk/nextjs/server";
+import CreateResumeButton from "./CreateResumeButton";
+import ResumeItem from "./ResumeItem";
+import { getUserSubscriptionLevel } from "@/lib/subscription";
+import { canCreateResume } from "@/lib/permission";
 
-import { Button } from "@/components/ui/button";
-import { PlusSquare, Upload } from "lucide-react";
-import { useRouter } from "next/navigation"; // Import the useRouter hook
+export default async function Page() {
+  const { userId } = await auth();
 
-export default function Page() {
-  const router = useRouter(); // Initialize the router
+  if (!userId) {
+    return null;
+  }
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      console.log("Selected file:", file.name);
-      // Redirect to the /reviews page after file selection
-      router.push("/reviews");
-    }
-  };
+  const [resumes, totalCount, SubscriptionLevel] = await Promise.all([
+    prisma.resume.findMany({
+      where: {
+        userId,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      include: resumeDataInclude,
+    }),
+    prisma.resume.count({
+      where: {
+        userId,
+      },
+    }),
+    getUserSubscriptionLevel(userId),
+  ]);
+  // Check quota for non premium users
 
   return (
     <main className="mx-auto w-full max-w-7xl space-y-6 px-3 py-6">
-      {/* Button to create a new resume */}
-      <Button asChild className="mx-auto flex w-fit gap-2">
-        <a href="/editor">
-          <PlusSquare className="size-5" />
-          New resume
-        </a>
-      </Button>
-
-      {/* Button to import a resume */}
-      <label
-        htmlFor="import-resume"
-        className="mx-auto flex w-fit cursor-pointer gap-2"
-      >
-        <Button asChild>
-          <div className="flex items-center gap-2">
-            <Upload className="size-5" />
-            Import resume
-          </div>
-        </Button>
-        <input
-          id="import-resume"
-          type="file"
-          accept=".pdf,.doc,.docx"
-          className="hidden"
-          onChange={handleFileUpload}
-        />
-      </label>
+      <CreateResumeButton
+        canCreate={canCreateResume(SubscriptionLevel, totalCount)}
+      />
+      <div className="space-y-1">
+        <h1 className="text-3xl font-bold">Your resumes</h1>
+        <p>Total: {totalCount}</p>
+      </div>
+      <div className="md:gird-cols-3 flex w-full grid-cols-2 flex-col gap-3 sm:grid lg:grid-cols-4">
+        {resumes.map((resume) => (
+          <ResumeItem key={resume.id} resume={resume} />
+        ))}
+      </div>
     </main>
   );
 }

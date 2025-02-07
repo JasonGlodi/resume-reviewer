@@ -9,11 +9,13 @@ import { BorderStyles } from "@/app/(main)/editor/BorderStyleButton";
 
 interface ResumePreviewProps {
   resumeData: ResumeValues;
+  contentRef?: React.Ref<HTMLDivElement>;
   className?: string;
 }
 
 export default function ResumePreview({
   resumeData,
+  contentRef,
   className,
 }: ResumePreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -32,6 +34,8 @@ export default function ResumePreview({
         style={{
           zoom: (1 / 794) * width,
         }}
+        ref={contentRef}
+        id="resumePreviewContent"
       >
         <PersonalInfoHeader resumeData={resumeData} />
         <SummarySection resumeData={resumeData} />
@@ -259,36 +263,33 @@ function SkillsSection({ resumeData }: ResumeSectionProps) {
           borderColor: colorHex,
         }}
       />
-      <div className="border-2">
-        <div className="break-inside-avoid space-y-3">
-          <p
-            className="text-lg font-semibold"
-            style={{
-              color: colorHex,
-            }}
-          >
-            Skills
-          </p>
-          <div className="flex break-inside-avoid flex-wrap gap-2">
-            {skills.map((skill, index) => (
-              <Badge
-                key={index}
-                className="rounded-md bg-black text-white hover:bg-black"
-                style={{
-                  backgroundColor: colorHex,
-
-                  borderRadius:
-                    borderStyle === BorderStyles.SQUARE
-                      ? "0px"
-                      : borderStyle === BorderStyles.CIRCLE
-                        ? "9999px"
-                        : "8px",
-                }}
-              >
-                {skill}
-              </Badge>
-            ))}
-          </div>
+      <div className="break-inside-avoid space-y-3">
+        <p
+          className="text-lg font-semibold"
+          style={{
+            color: colorHex,
+          }}
+        >
+          Skills
+        </p>
+        <div className="flex break-inside-avoid flex-wrap gap-2">
+          {skills.map((skill, index) => (
+            <Badge
+              key={index}
+              className="rounded-md bg-black text-white hover:bg-black"
+              style={{
+                backgroundColor: colorHex,
+                borderRadius:
+                  borderStyle === BorderStyles.SQUARE
+                    ? "0px"
+                    : borderStyle === BorderStyles.CIRCLE
+                      ? "9999px"
+                      : "8px",
+              }}
+            >
+              {skill}
+            </Badge>
+          ))}
         </div>
       </div>
     </>

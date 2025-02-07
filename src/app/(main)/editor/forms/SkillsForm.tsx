@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
-export default function SkillForm({
+export default function SkillsForm({
   resumeData,
   setResumeData,
 }: EditorFormProps) {
@@ -24,11 +24,11 @@ export default function SkillForm({
       skills: resumeData.skills || [],
     },
   });
+
   useEffect(() => {
     const { unsubscribe } = form.watch(async (values) => {
       const isValid = await form.trigger();
       if (!isValid) return;
-      // update resume data
       setResumeData({
         ...resumeData,
         skills:
@@ -58,7 +58,7 @@ export default function SkillForm({
                 <FormControl>
                   <Textarea
                     {...field}
-                    placeholder="e.g React.Js, Node.js, graphic design, ..."
+                    placeholder="e.g. React.js, Node.js, graphic design, ..."
                     onChange={(e) => {
                       const skills = e.target.value.split(",");
                       field.onChange(skills);
@@ -66,7 +66,7 @@ export default function SkillForm({
                   />
                 </FormControl>
                 <FormDescription>
-                  Separate each skills with a comma.
+                  Separate each skill with a comma.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
