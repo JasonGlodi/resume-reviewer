@@ -5,7 +5,7 @@ import { FileUserIcon, PenLineIcon, StarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { reviewResume } from "./forms/actions";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ResumeValues } from "@/lib/validation";
 
@@ -15,7 +15,7 @@ interface FooterProps {
   showSmResumePreview: boolean;
   setShowSmResumePreview: (show: boolean) => void;
   isSaving: boolean;
-  resumeData: ResumeValues; // Replace 'any' with your actual resume data type
+  resumeData: ResumeValues;
 }
 
 export default function Footer({
@@ -28,8 +28,14 @@ export default function Footer({
 }: FooterProps) {
   const router = useRouter();
   const [isReviewing, setIsReviewing] = useState(false);
-
+  const [clientRendered, setClientRendered] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setClientRendered(true);
+    console.log("Current Step:", currentStep);
+    console.log("Resume Data:", resumeData);
+  }, [currentStep, resumeData]);
 
   const previousStep = steps.find(
     (_, index) => steps[index + 1]?.key === currentStep,
@@ -42,10 +48,12 @@ export default function Footer({
   const handleReviewClick = async () => {
     try {
       setIsReviewing(true);
+      console.log("Reviewing resume with data:", resumeData);
       const review = await reviewResume(resumeData);
+      console.log("Review Response:", review);
       router.push(`/review?review=${encodeURIComponent(review)}`);
     } catch (error) {
-      console.error(error);
+      console.error("Error reviewing resume:", error);
       toast({
         variant: "destructive",
         description: "Something went wrong. Please try again.",
@@ -87,14 +95,16 @@ export default function Footer({
           {showSmResumePreview ? <PenLineIcon /> : <FileUserIcon />}
         </Button>
         <div className="flex items-center gap-3">
-          <Button
-            variant="secondary"
-            onClick={handleReviewClick}
-            disabled={isReviewing}
-          >
-            <StarIcon className="mr-2 h-4 w-4" />
-            {isReviewing ? "Reviewing..." : "Review Resume"}
-          </Button>
+          {clientRendered && (
+            <Button
+              variant="secondary"
+              onClick={handleReviewClick}
+              disabled={isReviewing}
+            >
+              <StarIcon className="mr-2 h-4 w-4" />
+              {isReviewing ? "Reviewing..." : "Review Resume"}
+            </Button>
+          )}
           <Button variant="secondary" asChild>
             <Link href="/resumes">Close</Link>
           </Button>
