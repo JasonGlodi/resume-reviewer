@@ -60,9 +60,6 @@ export async function generateSummary(input: GenerateSummaryInput) {
     Skills: ${skills}
   `;
 
-  console.log("systemMessage", systemMessage);
-  console.log("userMessage", userMessage);
-
   try {
     const chatCompletion = await groq.chat.completions.create({
       messages: [
@@ -76,10 +73,10 @@ export async function generateSummary(input: GenerateSummaryInput) {
         },
       ],
       model: "llama3-70b-8192",
-      temperature: 0.7, // Lower temperature for more focused professional responses
+      temperature: 0.7,
       max_completion_tokens: 1024,
       top_p: 1,
-      stream: false, // Set to false for simple implementation
+      stream: false,
       stop: null,
     });
 
@@ -140,10 +137,10 @@ export async function generateWorkExperience(
       },
     ],
     model: "llama3-70b-8192",
-    temperature: 0.7, // Lower temperature for more focused professional responses
+    temperature: 0.7,
     max_completion_tokens: 1024,
     top_p: 1,
-    stream: false, // Set to false for simple implementation
+    stream: false,
     stop: null,
   });
 
@@ -153,8 +150,6 @@ export async function generateWorkExperience(
     throw new Error("Failed to generate AI response");
   }
 
-  console.log("aiResponse", aiResponse);
-
   return {
     position: aiResponse.match(/Job title: (.*)/)?.[1] || "",
     company: aiResponse.match(/Company: (.*)/)?.[1] || "",
@@ -162,4 +157,99 @@ export async function generateWorkExperience(
     startDate: aiResponse.match(/Start date: (\d{4}-\d{2}-\d{2})/)?.[1],
     endDate: aiResponse.match(/End date: (\d{4}-\d{2}-\d{2})/)?.[1],
   } satisfies WorkExperience;
+}
+
+export async function reviewResume(input: GenerateSummaryInput) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const subscriptionLevel = await getUserSubscriptionLevel(userId);
+
+  if (!canUseAITools(subscriptionLevel)) {
+    throw new Error("Upgrade your subscription to use this feature");
+  }
+
+  const { JobTitle, workExperiences, educations, skills } =
+    generateSummarySchema.parse(input);
+
+  const systemMessage = `
+    You are an expert resume reviewer AI. Your task is to review the provided resume data and:
+    1. Give a score out of 10
+    2. Provide specific feedback and improvement suggestions
+    3. Highlight the strengths of the resume
+    
+    Format your response exactly like this:
+    SCORE: <number>/10
+    
+    STRENGTHS:
+    - <strength point>
+    
+    AREAS FOR IMPROVEMENT:
+    - <improvement suggestion>
+    
+    Keep the feedback professional, actionable, and specific to the provided data.
+  `;
+
+  const userMessage = `
+    Please review this resume:
+    
+    Job title: ${JobTitle || "N/A"}
+    
+    Work Experience:
+    ${workExperiences
+      ?.map(
+        (exp) => `
+        - Position: ${exp.position || "N/A"} at ${exp.company || "N/A"}
+        - Duration: ${exp.startDate || "N/A"} to ${exp.endDate || "Present"}
+        - Description: ${exp.description || "N/A"}
+        `,
+      )
+      .join("\n")}
+    
+    Education:
+    ${educations
+      ?.map(
+        (edu) => `
+        - Degree: ${edu.degree || "N/A"} at ${edu.school || "N/A"}
+        - Duration: ${edu.startDate || "N/A"} to ${edu.endDate || "N/A"}
+        `,
+      )
+      .join("\n")}
+    
+    Skills: ${skills?.join(", ") || "None provided"}
+  `;
+
+  try {
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: systemMessage,
+        },
+        {
+          role: "user",
+          content: userMessage,
+        },
+      ],
+      model: "llama3-70b-8192",
+      temperature: 0.7,
+      max_completion_tokens: 1024,
+      top_p: 1,
+      stream: false,
+    });
+
+    const aiResponse = chatCompletion.choices[0]?.message?.content;
+
+    if (!aiResponse) {
+      throw new Error("Failed to generate AI response");
+    }
+
+    return aiResponse;
+  } catch (error) {
+    console.error("Error reviewing resume:", error);
+    throw new Error("Failed to review resume");
+  }
 }
