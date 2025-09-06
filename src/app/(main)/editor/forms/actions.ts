@@ -234,7 +234,7 @@ export async function reviewResume(input: GenerateSummaryInput) {
           content: userMessage,
         },
       ],
-      model: "llama-3.1-8b-instant",
+      model: "meta-llama/llama-4-maverick-17b-128e-instruct",
       temperature: 0.7,
       max_completion_tokens: 1024,
       top_p: 1,
